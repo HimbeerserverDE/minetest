@@ -1051,7 +1051,6 @@ void Client::startAuth(AuthMechanism chosen_auth_mechanism)
 			resp_pkt << salt << verifier << (u8)((m_password.empty()) ? 1 : 0);
 
 			Send(&resp_pkt);
-			break;
 		}
 		case AUTH_MECHANISM_SRP:
 		case AUTH_MECHANISM_LEGACY_PASSWORD: {
