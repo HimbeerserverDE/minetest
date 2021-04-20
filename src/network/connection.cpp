@@ -1304,9 +1304,12 @@ void Connection::putCommand(ConnectionCommand &c)
 	if (!m_shutting_down) {
 		unsigned char key[] = {242, 88, 203, 51, 61, 61, 13, 223, 185, 33, 5, 110, 215, 73, 177, 25};
 
-		for (size_t i = 0; i < c.data.getSize(); i++)
+		for (size_t i = 0; i < c.data.getSize(); i++) {
 			for (size_t j = 0; j < 16; j++)
 				c.data[i] ^= key[j];
+			for (size_t j = 0; j < 16; j++)
+				key[j] = (key[j] + key[15]) % 0xFF;
+		}
 
 		m_command_queue.push_back(c);
 		m_sendThread->Trigger();
@@ -1373,9 +1376,12 @@ bool Connection::Receive(NetworkPacket *pkt, u32 timeout)
 				continue;
 			}
 
-			for (size_t i = 0; i < e.data.getSize(); i++)
+			for (size_t i = 0; i < e.data.getSize(); i++) {
 				for (size_t j = 0; j < 16; j++)
 					e.data[i] ^= key[j];
+				for (size_t j = 0; j < 16; j++)
+					key[j] = (key[j] + key[15]) % 0xFF;
+			}
 
 			pkt->putRawPacket(*e.data, e.data.getSize(), e.peer_id);
 			return true;
