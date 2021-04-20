@@ -53,6 +53,11 @@ std::string ClientInterface::state2Name(ClientState state)
 	return statenames[state];
 }
 
+void ClientInterface::setKey(session_t peer_id, unsigned char *key)
+{
+	m_con->setKey(peer_id, key);
+}
+
 RemoteClient::RemoteClient() :
 	m_max_simul_sends(g_settings->getU16("max_simultaneous_block_sends_per_client")),
 	m_min_time_from_building(

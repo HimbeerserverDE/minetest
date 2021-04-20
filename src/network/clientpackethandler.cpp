@@ -119,6 +119,8 @@ void Client::handleCommand_Hello(NetworkPacket* pkt)
 
 void Client::handleCommand_AuthAccept(NetworkPacket* pkt)
 {
+	m_con->setKey(PEER_ID_SERVER, (unsigned char *) srp_user_get_session_key((SRPUser *) m_auth_data, nullptr));
+
 	deleteAuthData();
 
 	v3f playerpos;

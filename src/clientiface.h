@@ -502,6 +502,8 @@ public:
 	}
 
 	static std::string state2Name(ClientState state);
+
+	void setKey(session_t peer_id, unsigned char *key);
 protected:
 	//TODO find way to avoid this functions
 	void lock() { m_clients_mutex.lock(); }

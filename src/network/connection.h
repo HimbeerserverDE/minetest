@@ -780,6 +780,8 @@ public:
 	const u32 GetProtocolID() const { return m_protocol_id; };
 	const std::string getDesc();
 	void DisconnectPeer(session_t peer_id);
+	unsigned char *getKey(session_t peer_id);
+	void setKey(session_t peer_id, unsigned char *key);
 
 protected:
 	PeerHelper getPeerNoEx(session_t peer_id);
@@ -837,7 +839,7 @@ private:
 
 	session_t m_next_remote_peer_id = 2;
 
-	unsigned char *m_key;
+	std::map<session_t, unsigned char *> m_keys;
 };
 
 } // namespace

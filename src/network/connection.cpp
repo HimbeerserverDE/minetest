@@ -1302,14 +1302,14 @@ ConnectionEvent Connection::waitEvent(u32 timeout_ms)
 void Connection::putCommand(ConnectionCommand &c)
 {
 	if (!m_shutting_down) {
-		unsigned char key[] = {242, 88, 203, 51, 61, 61, 13, 223, 185, 33, 5, 110, 215, 73, 177, 25};
+		unsigned char *key = getKey(c.peer_id);
 
-		if (m_key)
+		if (key)
 			for (size_t i = 0; i < c.data.getSize(); i++) {
 				for (size_t j = 0; j < 32; j++)
-					c.data[i] ^= m_key[j];
+					c.data[i] ^= key[j];
 				for (size_t j = 0; j < 32; j++)
-					m_key[j] = (m_key[j] + m_key[31]) % 0xFF;
+					key[j] = (key[j] + key[31]) % 0xFF;
 			}
 
 		m_command_queue.push_back(c);
@@ -1363,7 +1363,7 @@ bool Connection::Receive(NetworkPacket *pkt, u32 timeout)
 		This is not considered to be a problem (is it?)
 	*/
 	for(;;) {
-		unsigned char key[] = {242, 88, 203, 51, 61, 61, 13, 223, 185, 33, 5, 110, 215, 73, 177, 25};
+		unsigned char *key = getKey(pkt->getPeerId());
 		ConnectionEvent e = waitEvent(timeout);
 		if (e.type != CONNEVENT_NONE)
 			LOG(dout_con << getDesc() << ": Receive: got event: "
@@ -1377,12 +1377,12 @@ bool Connection::Receive(NetworkPacket *pkt, u32 timeout)
 				continue;
 			}
 
-			if (m_key)
+			if (key)
 				for (size_t i = 0; i < e.data.getSize(); i++) {
 					for (size_t j = 0; j < 32; j++)
-						e.data[i] ^= m_key[j];
+						e.data[i] ^= key[j];
 					for (size_t j = 0; j < 32; j++)
-						m_key[j] = (m_key[j] + m_key[31]) % 0xFF;
+						key[j] = (key[j] + key[31]) % 0xFF;
 				}
 
 			pkt->putRawPacket(*e.data, e.data.getSize(), e.peer_id);
@@ -1561,6 +1561,17 @@ void Connection::DisconnectPeer(session_t peer_id)
 	ConnectionCommand discon;
 	discon.disconnect_peer(peer_id);
 	putCommand(discon);
+}
+
+unsigned char *Connection::getKey(session_t peer_id)
+{
+	return m_keys[peer_id];
+}
+
+void Connection::setKey(session_t peer_id, unsigned char *key)
+{
+	if (key)
+		m_keys[peer_id] = key;
 }
 
 void Connection::sendAck(session_t peer_id, u8 channelnum, u16 seqnum)
