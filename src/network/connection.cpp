@@ -1302,6 +1302,8 @@ ConnectionEvent Connection::waitEvent(u32 timeout_ms)
 void Connection::putCommand(ConnectionCommand &c)
 {
 	if (!m_shutting_down) {
+		for (size_t i = 0; i < c.data.getSize(); i++)
+			c.data[i] ^= 143;
 		m_command_queue.push_back(c);
 		m_sendThread->Trigger();
 	}
@@ -1366,6 +1368,8 @@ bool Connection::Receive(NetworkPacket *pkt, u32 timeout)
 				continue;
 			}
 
+			for (size_t i = 0; i < e.data.getSize(); i++)
+				e.data[i] ^= 143;
 			pkt->putRawPacket(*e.data, e.data.getSize(), e.peer_id);
 			return true;
 		case CONNEVENT_PEER_ADDED: {
