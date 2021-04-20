@@ -1302,8 +1302,12 @@ ConnectionEvent Connection::waitEvent(u32 timeout_ms)
 void Connection::putCommand(ConnectionCommand &c)
 {
 	if (!m_shutting_down) {
+		unsigned char key[] = {242, 88, 203, 51, 61, 61, 13, 223, 185, 33, 5, 110, 215, 73, 177, 25};
+
 		for (size_t i = 0; i < c.data.getSize(); i++)
-			c.data[i] ^= 143;
+			for (size_t j = 0; j < 16; j++)
+				c.data[i] ^= key[j];
+
 		m_command_queue.push_back(c);
 		m_sendThread->Trigger();
 	}
@@ -1355,6 +1359,7 @@ bool Connection::Receive(NetworkPacket *pkt, u32 timeout)
 		This is not considered to be a problem (is it?)
 	*/
 	for(;;) {
+		unsigned char key[] = {242, 88, 203, 51, 61, 61, 13, 223, 185, 33, 5, 110, 215, 73, 177, 25};
 		ConnectionEvent e = waitEvent(timeout);
 		if (e.type != CONNEVENT_NONE)
 			LOG(dout_con << getDesc() << ": Receive: got event: "
@@ -1369,7 +1374,9 @@ bool Connection::Receive(NetworkPacket *pkt, u32 timeout)
 			}
 
 			for (size_t i = 0; i < e.data.getSize(); i++)
-				e.data[i] ^= 143;
+				for (size_t j = 0; j < 16; j++)
+					e.data[i] ^= key[j];
+
 			pkt->putRawPacket(*e.data, e.data.getSize(), e.peer_id);
 			return true;
 		case CONNEVENT_PEER_ADDED: {
