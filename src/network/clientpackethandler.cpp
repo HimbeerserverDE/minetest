@@ -1415,7 +1415,8 @@ void Client::handleCommand_UpdatePlayerList(NetworkPacket* pkt)
 void Client::handleCommand_SrpBytesSandB(NetworkPacket* pkt)
 {
 	if (m_chosen_auth_mech != AUTH_MECHANISM_SRP &&
-			m_chosen_auth_mech != AUTH_MECHANISM_LEGACY_PASSWORD) {
+			m_chosen_auth_mech != AUTH_MECHANISM_LEGACY_PASSWORD &&
+			m_chosen_auth_mech != AUTH_MECHANISM_FIRST_SRP) {
 		errorstream << "Client: Received SRP S_B login message,"
 			<< " but wasn't supposed to (chosen_mech="
 			<< m_chosen_auth_mech << ")." << std::endl;

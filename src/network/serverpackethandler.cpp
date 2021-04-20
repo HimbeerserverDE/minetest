@@ -1526,9 +1526,8 @@ void Server::handleCommand_FirstSrp(NetworkPacket* pkt)
 
 		initial_ver_key = encode_srp_verifier(verification_key, salt);
 		m_script->createAuth(playername, initial_ver_key);
-		m_script->on_authplayer(playername, addr_s, true);
 
-		acceptAuth(peer_id, false);
+		client->enc_pwd = initial_ver_key;
 	} else {
 		if (cstate < CS_SudoMode) {
 			infostream << "Server::ProcessData(): Ignoring TOSERVER_FIRST_SRP from "
@@ -1567,7 +1566,8 @@ void Server::handleCommand_SrpBytesA(NetworkPacket* pkt)
 		return;
 	}
 
-	if (client->chosen_mech != AUTH_MECHANISM_NONE) {
+	if (client->chosen_mech != AUTH_MECHANISM_NONE &&
+			client->chosen_mech != AUTH_MECHANISM_FIRST_SRP) {
 		actionstream << "Server: got SRP _A packet, while auth is already "
 			"going on with mech " << client->chosen_mech << " from " <<
 			getPeerAddress(peer_id).serializeString() <<
@@ -1590,10 +1590,12 @@ void Server::handleCommand_SrpBytesA(NetworkPacket* pkt)
 		<< bytes_A.length() << "." << std::endl;
 
 	AuthMechanism chosen = (based_on == 0) ?
-		AUTH_MECHANISM_LEGACY_PASSWORD : AUTH_MECHANISM_SRP;
+		AUTH_MECHANISM_LEGACY_PASSWORD :
+		(AuthMechanism) (AUTH_MECHANISM_SRP | AUTH_MECHANISM_FIRST_SRP);
 
 	if (wantSudo) {
-		if (!client->isSudoMechAllowed(chosen)) {
+		if (!client->isSudoMechAllowed(
+				(AuthMechanism) (chosen & ~AUTH_MECHANISM_FIRST_SRP))) {
 			actionstream << "Server: Player \"" << client->getName() <<
 				"\" at " << getPeerAddress(peer_id).serializeString() <<
 				" tried to change password using unallowed mech " << chosen <<
@@ -1611,7 +1613,7 @@ void Server::handleCommand_SrpBytesA(NetworkPacket* pkt)
 		}
 	}
 
-	client->chosen_mech = chosen;
+	client->chosen_mech = (AuthMechanism) (chosen & ~AUTH_MECHANISM_FIRST_SRP);
 
 	std::string salt;
 	std::string verifier;
@@ -1677,7 +1679,8 @@ void Server::handleCommand_SrpBytesM(NetworkPacket* pkt)
 	}
 
 	if (client->chosen_mech != AUTH_MECHANISM_SRP &&
-			client->chosen_mech != AUTH_MECHANISM_LEGACY_PASSWORD) {
+			client->chosen_mech != AUTH_MECHANISM_LEGACY_PASSWORD &&
+			client->chosen_mech != AUTH_MECHANISM_FIRST_SRP) {
 		warningstream << "Server: got SRP_M packet, while auth "
 			"is going on with mech " << client->chosen_mech << " from "
 			<< addr_s << " (wantSudo=" << wantSudo << "). Denying." << std::endl;
