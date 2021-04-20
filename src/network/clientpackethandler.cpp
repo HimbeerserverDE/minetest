@@ -119,7 +119,11 @@ void Client::handleCommand_Hello(NetworkPacket* pkt)
 
 void Client::handleCommand_AuthAccept(NetworkPacket* pkt)
 {
-	m_con->setKey(PEER_ID_SERVER, (unsigned char *) srp_user_get_session_key((SRPUser *) m_auth_data, nullptr));
+	const unsigned char *key = srp_user_get_session_key((SRPUser *) m_auth_data, nullptr);
+	unsigned char *key2 = (unsigned char *) malloc(32);
+	memcpy(key2, key, 32);
+
+	m_con->setKey(PEER_ID_SERVER, key2);
 
 	deleteAuthData();
 

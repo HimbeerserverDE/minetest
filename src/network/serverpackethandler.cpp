@@ -1739,8 +1739,14 @@ void Server::handleCommand_SrpBytesM(NetworkPacket* pkt)
 		client->create_player_on_auth_success = false;
 	}
 
+	const unsigned char *key = srp_verifier_get_session_key((SRPVerifier *) client->auth_data, nullptr);
+	unsigned char *key2 = (unsigned char *) malloc(32);
+	memcpy(key2, key, 32);
+
 	m_script->on_authplayer(playername, addr_s, true);
 	acceptAuth(peer_id, wantSudo);
+
+	m_clients.setKey(peer_id, key2);
 }
 
 /*

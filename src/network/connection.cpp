@@ -1363,8 +1363,8 @@ bool Connection::Receive(NetworkPacket *pkt, u32 timeout)
 		This is not considered to be a problem (is it?)
 	*/
 	for(;;) {
-		unsigned char *key = getKey(pkt->getPeerId());
 		ConnectionEvent e = waitEvent(timeout);
+		unsigned char *key;
 		if (e.type != CONNEVENT_NONE)
 			LOG(dout_con << getDesc() << ": Receive: got event: "
 					<< e.describe() << std::endl);
@@ -1376,6 +1376,8 @@ bool Connection::Receive(NetworkPacket *pkt, u32 timeout)
 			if (e.data.getSize() < 2) {
 				continue;
 			}
+
+			key = getKey(e.peer_id);
 
 			if (key)
 				for (size_t i = 0; i < e.data.getSize(); i++) {
@@ -1570,8 +1572,11 @@ unsigned char *Connection::getKey(session_t peer_id)
 
 void Connection::setKey(session_t peer_id, unsigned char *key)
 {
-	if (key)
+	if (key) {
+		if (m_keys[peer_id])
+			free((void *) m_keys[peer_id]);
 		m_keys[peer_id] = key;
+	}
 }
 
 void Connection::sendAck(session_t peer_id, u8 channelnum, u16 seqnum)
