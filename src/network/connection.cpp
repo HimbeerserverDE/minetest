@@ -1305,12 +1305,9 @@ void Connection::putCommand(ConnectionCommand &c)
 		unsigned char *key = getKey(c.peer_id);
 
 		if (key)
-			for (size_t i = 0; i < c.data.getSize(); i++) {
+			for (size_t i = 0; i < c.data.getSize(); i++)
 				for (size_t j = 0; j < 32; j++)
 					c.data[i] ^= key[j];
-				for (size_t j = 0; j < 32; j++)
-					key[j] = (key[j] + key[31]) % 0xFF;
-			}
 
 		m_command_queue.push_back(c);
 		m_sendThread->Trigger();
@@ -1380,12 +1377,9 @@ bool Connection::Receive(NetworkPacket *pkt, u32 timeout)
 			key = getKey(e.peer_id);
 
 			if (key)
-				for (size_t i = 0; i < e.data.getSize(); i++) {
+				for (size_t i = 0; i < e.data.getSize(); i++) 
 					for (size_t j = 0; j < 32; j++)
 						e.data[i] ^= key[j];
-					for (size_t j = 0; j < 32; j++)
-						key[j] = (key[j] + key[31]) % 0xFF;
-				}
 
 			pkt->putRawPacket(*e.data, e.data.getSize(), e.peer_id);
 			return true;
